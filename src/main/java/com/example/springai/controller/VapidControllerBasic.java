@@ -1,4 +1,4 @@
-package com.example.springai.vapid;
+package com.example.springai.controller;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.springai.vapid.PushSubscription;
+import com.example.springai.vapid.VapidGenerator;
 
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;

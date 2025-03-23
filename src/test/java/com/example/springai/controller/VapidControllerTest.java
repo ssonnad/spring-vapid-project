@@ -1,4 +1,4 @@
-package com.example.springai.vapid;
+package com.example.springai.controller;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -24,6 +24,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+
+import com.example.springai.service.SubscriptionService;
+import com.example.springai.vapid.PushSubscription;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -76,6 +79,7 @@ class VapidControllerTest {
         // Verify subscription was stored
         assertTrue(
             subscriptionService.getSubscriptionsByEmail("test@example.com")
+                .get(5, TimeUnit.SECONDS)
                 .stream()
                 .anyMatch(sub -> sub.getEndpoint().equals("https://test.com/push"))
         );

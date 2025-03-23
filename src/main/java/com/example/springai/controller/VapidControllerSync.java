@@ -1,4 +1,4 @@
-package com.example.springai.vapid;
+package com.example.springai.controller;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -18,6 +18,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.example.springai.service.SubscriptionService;
+import com.example.springai.vapid.PushSubscription;
+import com.example.springai.vapid.VapidGenerator;
 
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
@@ -74,7 +78,14 @@ public class VapidControllerSync {
 
             int sentCount = 0;
             List<PushSubscription> targetSubscriptions = targetEmails.stream()
-                .flatMap(email -> subscriptionService.getSubscriptionsByEmail(email).stream())
+                .map(email -> {
+                    try {
+                        return subscriptionService.getSubscriptionsByEmail(email).get();
+                    } catch (InterruptedException | ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .flatMap(List::stream)
                 .toList();
 
             if (targetSubscriptions.isEmpty()) {

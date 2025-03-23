@@ -1,4 +1,4 @@
-package com.example.springai.vapid;
+package com.example.springai.controller;
 
 import java.net.URI;
 import java.net.http.HttpClient;
