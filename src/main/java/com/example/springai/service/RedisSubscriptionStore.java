@@ -27,7 +27,7 @@ public class RedisSubscriptionStore implements SubscriptionStore {
     }
 
     @Override
-    @Async
+    @Async("taskExecutor")
     public CompletableFuture<Void> addSubscription(String email, PushSubscription subscription) {
         return CompletableFuture.runAsync(() -> {
             String key = KEY_PREFIX + email;
@@ -68,7 +68,7 @@ public class RedisSubscriptionStore implements SubscriptionStore {
     }
 
     @Override
-    @Async
+    @Async("taskExecutor")
     public CompletableFuture<List<PushSubscription>> getSubscriptionsByEmail(String email) {
         return CompletableFuture.supplyAsync(() -> {
             String key = KEY_PREFIX + email;
@@ -78,7 +78,7 @@ public class RedisSubscriptionStore implements SubscriptionStore {
     }
 
     @Override
-    @Async
+    @Async("taskExecutor")
     public CompletableFuture<List<PushSubscription>> getAllSubscriptions() {
         return CompletableFuture.supplyAsync(() -> {
             Set<String> keys = redisTemplate.keys(KEY_PREFIX + "*");
@@ -92,7 +92,7 @@ public class RedisSubscriptionStore implements SubscriptionStore {
     }
 
     @Override
-    @Async
+    @Async("taskExecutor")
     public CompletableFuture<Void> removeSubscription(String email, String endpoint) {
         return CompletableFuture.runAsync(() -> {
             String key = KEY_PREFIX + email;
