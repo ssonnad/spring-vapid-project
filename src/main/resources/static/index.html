@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Push Notification Test</title>
+</head>
+<body>
+    <h1>Web Push Notification Test</h1>
+    <input type="email" id="emailInput" placeholder="Enter your email" required>
+    <button id="subscribeButton">Subscribe to Push Notifications</button>
+    <button id="unsubscribeButton" disabled>Unsubscribe</button>
+    <button id="sendNotificationButton" disabled>Send Test Notification</button>
+    <div id="status"></div>
+
+    <script>
+        const vapidPublicKey = ''; // Will be fetched from server
+        const statusDiv = document.getElementById('status');
+        const subscribeButton = document.getElementById('subscribeButton');
+        const unsubscribeButton = document.getElementById('unsubscribeButton');
+        const sendNotificationButton = document.getElementById('sendNotificationButton');
+
+        // Check if service workers and push messaging are supported
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+            initialize();
+        } else {
+            updateStatus('Push notifications are not supported');
+        }
+
+        async function initialize() {
+            try {
+                // Register service worker
+                const registration = await navigator.serviceWorker.register('service-worker.js');
+                updateStatus('Service Worker registered');
+
+                // Fetch VAPID public key
+                const response = await fetch('/vapid/keys');
+                const data = await response.json();
+                window.vapidPublicKey = data.publicKey;
+
+                // Check if already subscribed
+                const subscription = await registration.pushManager.getSubscription();
+                if (subscription) {
+                    updateStatus('Already subscribed to push notifications');
+                    sendNotificationButton.disabled = false;
+                    unsubscribeButton.disabled = false;
+                    
+                    // Restore email if available
+                    const savedEmail = localStorage.getItem('pushNotificationEmail');
+                    if (savedEmail) {
+                        document.getElementById('emailInput').value = savedEmail;
+                    }
+                }
+
+                subscribeButton.addEventListener('click', subscribe);
+                unsubscribeButton.addEventListener('click', unsubscribe);
+                sendNotificationButton.addEventListener('click', sendNotification);
+            } catch (error) {
+                updateStatus('Error during initialization: ' + error);
+            }
+        }
+
+        async function subscribe() {
+            try {
+                const emailInput = document.getElementById('emailInput');
+                const email = emailInput.value.trim();
+                
+                if (!email) {
+                    updateStatus('Please enter an email address');
+                    return;
+                }
+
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(window.vapidPublicKey)
+                });
+
+                // Send subscription to server with email
+                await fetch(`/vapid/subscribe/${encodeURIComponent(email)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(subscription)
+                });
+
+                updateStatus('Successfully subscribed to push notifications for ' + email);
+                sendNotificationButton.disabled = false;
+                
+                // Store email for later use
+                localStorage.setItem('pushNotificationEmail', email);
+
+                // Update UI after successful subscription
+                unsubscribeButton.disabled = false;
+                sendNotificationButton.disabled = false;
+                updateStatus('Successfully subscribed to push notifications for ' + email);
+            } catch (error) {
+                updateStatus('Error subscribing to push notifications: ' + error);
+            }
+        }
+
+        async function unsubscribe() {
+            try {
+                const registration = await navigator.serviceWorker.ready;
+                const subscription = await registration.pushManager.getSubscription();
+                
+                if (subscription) {
+                    const email = localStorage.getItem('pushNotificationEmail');
+                    if (email) {
+                        // Notify server to remove subscription
+                        await fetch(`/vapid/unsubscribe/${encodeURIComponent(email)}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ endpoint: subscription.endpoint })
+                        });
+                    }
+
+                    // Unsubscribe from push manager
+                    await subscription.unsubscribe();
+                    
+                    // Clear stored email
+                    localStorage.removeItem('pushNotificationEmail');
+                    document.getElementById('emailInput').value = '';
+                    
+                    // Update UI
+                    sendNotificationButton.disabled = true;
+                    unsubscribeButton.disabled = true;
+                    updateStatus('Successfully unsubscribed from push notifications');
+                }
+            } catch (error) {
+                updateStatus('Error unsubscribing from push notifications: ' + error);
+            }
+        }
+
+        async function sendNotification() {
+            try {
+                const email = localStorage.getItem('pushNotificationEmail');
+                if (!email) {
+                    updateStatus('No email found. Please subscribe first.');
+                    return;
+                }
+
+                await fetch('/vapid/push', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: 'Test notification from web page',
+                        emails: [email]
+                    })
+                });
+                updateStatus('Push notification sent');
+            } catch (error) {
+                updateStatus('Error sending push notification: ' + error);
+            }
+        }
+
+        function updateStatus(message) {
+            statusDiv.textContent = message;
+            console.log(message);
+        }
+
+        // Helper function to convert VAPID key
+        function urlBase64ToUint8Array(base64String) {
+            const padding = '='.repeat((4 - base64String.length % 4) % 4);
+            const base64 = (base64String + padding)
+                .replace(/\-/g, '+')
+                .replace(/_/g, '/');
+
+            const rawData = window.atob(base64);
+            const outputArray = new Uint8Array(rawData.length);
+
+            for (let i = 0; i < rawData.length; ++i) {
+                outputArray[i] = rawData.charCodeAt(i);
+            }
+            return outputArray;
+        }
+    </script>
+</body>
+</html>
