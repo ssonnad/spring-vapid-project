@@ -123,9 +123,34 @@ The application uses thread-safe collections:
 - Atomic operations for updates
 - Defensive copying for collection returns
 
-## Contributing
 
-Contributions are welcome! Please open an issue or submit a pull request for any enhancements or bug fixes.
+## The VAPID (Voluntary Application Server Identification) keys are used in two main places:
+### Client-Side Subscription (Browser):
+- The VAPID public key is sent to the browser
+- Browser uses it when creating a push subscription
+- This proves the application server's identity to the browser
+- The browser includes this in its subscription request to the push service
+
+### Server-Side Push (Our Server):
+The PushService uses both public and private keys to:
+- Sign a JWT (JSON Web Token) with the private key
+- Add the JWT in the Authorization header
+- Include the public key in the Crypto-Key header
+- This proves to the push service (like Google/Mozilla) that we're authorized to send to this subscription
+
+The VAPID keys serve as our server's identity:
+- Public key: Identifies our application to browsers and push services
+- Private key: Proves we own that identity through JWT signing
+This is different from the user's keys (p256dh and auth) which are used for message encryption. VAPID keys are for authentication/identification, while user keys are for encryption.
+Think of it like:
+- VAPID keys = Our server's ID and signature
+- User's keys = The encryption channel for the actual message
+The VAPID system helps push services:
+- Know who is sending notifications
+- Contact server admins if there are problems
+- Prevent unauthorized servers from sending notifications
+- Manage quotas and rate limits per application
+
 
 ## License
 

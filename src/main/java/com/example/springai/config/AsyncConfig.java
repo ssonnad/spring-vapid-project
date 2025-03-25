@@ -28,7 +28,7 @@ public class AsyncConfig {
         executor.setCorePoolSize(4);
         executor.setMaxPoolSize(8);
         executor.setQueueCapacity(100);
-        executor.setThreadNamePrefix("RedisAsync-");
+        executor.setThreadNamePrefix("VapidAsync-");
         executor.initialize();
         return executor;
     }

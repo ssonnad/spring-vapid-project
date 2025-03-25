@@ -3,6 +3,7 @@ package com.example.springai.service;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.example.springai.vapid.PushSubscription;
@@ -11,7 +12,7 @@ import com.example.springai.vapid.PushSubscription;
 public class SubscriptionService {
     private final SubscriptionStore subscriptionStore;
 
-    public SubscriptionService(SubscriptionStore subscriptionStore) {
+    public SubscriptionService(@Qualifier("valkeyStore") SubscriptionStore subscriptionStore) {
         this.subscriptionStore = subscriptionStore;
     }
 

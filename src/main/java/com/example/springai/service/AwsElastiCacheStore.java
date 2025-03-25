@@ -17,7 +17,7 @@ import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPoolConfig;
 
-@Component
+@Component("elastiCacheStore")
 public class AwsElastiCacheStore implements SubscriptionStore {
     private final JedisCluster jedisCluster;
     private final ObjectMapper objectMapper;

@@ -24,8 +24,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.springai.service.SubscriptionService;
+import com.example.springai.service.VapidKeyService;
 import com.example.springai.vapid.PushSubscription;
-import com.example.springai.vapid.VapidGenerator;
 
 import nl.martijndwars.webpush.Notification;
 import nl.martijndwars.webpush.PushService;
@@ -38,16 +38,22 @@ public class VapidController {
     private final String privateKey;
     private final SubscriptionService subscriptionService;
 
-    public VapidController(SubscriptionService subscriptionService) throws GeneralSecurityException {
+    public VapidController(SubscriptionService subscriptionService, VapidKeyService vapidKeyService) 
+            throws GeneralSecurityException {
         this.subscriptionService = subscriptionService;
         
         Security.addProvider(new BouncyCastleProvider());
 
-        VapidGenerator generator = new VapidGenerator();
-        this.publicKey = generator.getPublicKey();
-        this.privateKey = generator.getPrivateKey();
+        // Get or generate VAPID keys from cache
+        Map<String, String> keys = vapidKeyService.getOrGenerateKeys().join();
+        this.publicKey = keys.get("publicKey");
+        this.privateKey = keys.get("privateKey");
         
-        this.pushService = new PushService(publicKey, privateKey, "mailto:ssonnad@infomedia.com.au");
+        this.pushService = new PushService(
+            publicKey, 
+            privateKey, 
+            "mailto:ssonnad@infomedia.com.au"
+        );
     }
 
     @GetMapping("/keys")

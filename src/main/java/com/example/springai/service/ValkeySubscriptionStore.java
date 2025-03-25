@@ -24,7 +24,7 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.JedisSentinelPool;
 import redis.clients.jedis.Transaction;
 
-@Component
+@Component("valkeyStore")
 public class ValkeySubscriptionStore implements SubscriptionStore {
     private final JedisSentinelPool jedisPool;
     private final ObjectMapper objectMapper;

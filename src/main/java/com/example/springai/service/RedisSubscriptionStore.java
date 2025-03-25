@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 
 import com.example.springai.vapid.PushSubscription;
 
-@Component
+@Component("redisStore")
 public class RedisSubscriptionStore implements SubscriptionStore {
     private final RedisTemplate<String, List<PushSubscription>> redisTemplate;
 
